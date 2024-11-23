@@ -13,6 +13,7 @@ export default function Home() {
       <Tab.Screen name="ListeProfils" component={ListeProfils} />
       <Tab.Screen name="Groupes" component={Groupes} />
       <Tab.Screen name="MyProfil" component={MyProfil} />
+      
     </Tab.Navigator>
   );
 }

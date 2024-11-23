@@ -5,7 +5,7 @@ import { ImageBackground, StyleSheet, Text } from "react-native";
 export default function ListProfils() {
   return (
     <ImageBackground
-      source={require("../assets/imgbleu.jpg")}
+      source={require("../../assets/imgbleu.jpg")}
       style={styles.container}
     >
       <StatusBar style="light" />

@@ -2,8 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Button, ImageBackground, StyleSheet, Text, View } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import React, { useState } from 'react';
-import firebase from './config';
-import Home from './Home'; // Ensure Home is correctly imported
+import firebase from '../config';
 
 const auth = firebase.auth();
 
@@ -14,7 +13,7 @@ export default function NewUser(props) {
 
   return (
     <ImageBackground
-      source={require("./assets/photo1.jpeg")}
+      source={require("../assets/photo1.jpeg")}
       style={styles.container}>
       <View style={{
         backgroundColor: "#0005",

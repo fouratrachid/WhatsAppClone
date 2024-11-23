@@ -16,14 +16,14 @@ export default function MyProfil() {
 
   return (
     <ImageBackground
-      source={require("../assets/imgbleu.jpg")}
+      source={require("../../assets/imgbleu.jpg")}
       style={styles.container}
     >
       <StatusBar style="light" />
       <Text style={styles.textstyle}>My Account</Text>
 
       <Image
-        source={require("../assets/profil.png")}
+        source={require("../../assets/profil.png")}
         style={{
           height: 200,
           width: 200,

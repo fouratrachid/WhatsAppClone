@@ -1,8 +1,9 @@
 import { View, Text } from 'react-native'
 import React from 'react'
-import Auth from './Auth'
-import NewUser from './NewUser'
-import Home from './Home'
+import Auth from './Screens/Auth'
+import NewUser from './Screens/NewUser'
+import Home from './Screens/Home'
+import Chat from './Screens/Chat'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 
@@ -17,7 +18,9 @@ export default function App() {
         <Stack.Screen name='Home' component={Home}></Stack.Screen>
         <Stack.Screen name='NewUser' component={NewUser}
         options={{headerShown:true}}
+        
         ></Stack.Screen>
+        <Stack.Screen name='Chat' component={Chat}></Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   

@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { Button, ImageBackground, StyleSheet, Text, View } from 'react-native';
 import { TextInput } from 'react-native-paper';
-import firebase from './config';
+import firebase from '../config';
 import Home from './Home'; 
 const auth = firebase.auth();
 
@@ -10,7 +10,7 @@ export default function Auth(props) {
     var email,pwd;
   return (
     <ImageBackground
-    source={require("./assets/photo1.jpeg")}
+    source={require("../assets/photo1.jpeg")}
     style={styles.container}>
       <View style={{
         backgroundColor:"#0005",
