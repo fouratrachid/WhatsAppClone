@@ -6,10 +6,12 @@ import {
   FlatList,
   TextInput,
   StyleSheet,
-  Alert
+  Alert,
+  StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import firebase from '../../config';
 
 const Groupes = (props) => {
@@ -98,10 +100,22 @@ const Groupes = (props) => {
 
   const renderGroup = ({ item }) => (
     <TouchableOpacity
-      style={styles.groupContainer}
+      style={styles.cardContainer}
       onPress={() => props.navigation.navigate("GroupChat", { group: item })}
     >
-      <Text style={styles.groupName}>{item.name}</Text>
+      <View style={styles.cardInner}>
+        <View style={styles.avatarContainer}>
+          <Ionicons name="people" size={40} color="#fff" />
+        </View>
+        <View style={styles.contactInfo}>
+          <Text style={styles.nameText} numberOfLines={1}>
+            {item.name}
+          </Text>
+        </View>
+        <View style={styles.chevronContainer}>
+          <Ionicons name="chevron-forward" size={24} color="#888" />
+        </View>
+      </View>
     </TouchableOpacity>
   );
 
@@ -121,90 +135,131 @@ const Groupes = (props) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Groups</Text>
-      </View>
-      {isCreatingGroup ? (
-        <>
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Group Name"
-              value={groupName}
-              onChangeText={setGroupName}
-              style={styles.input}
+    <LinearGradient
+      colors={['#6A11CB', '#2575FC']}
+      style={styles.container}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="light" />
+
+        <View style={styles.headerContainer}>
+          <Text style={styles.headerTitle}>Groups</Text>
+        </View>
+
+        {isCreatingGroup ? (
+          <>
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="Group Name"
+                value={groupName}
+                onChangeText={setGroupName}
+                style={styles.input}
+              />
+            </View>
+            <FlatList
+              data={users}
+              renderItem={renderUser}
+              keyExtractor={(item) => item.currentId}
+              style={styles.userList}
             />
-          </View>
-          <FlatList
-            data={users}
-            renderItem={renderUser}
-            keyExtractor={(item) => item.currentId}
-            style={styles.userList}
-          />
-          <TouchableOpacity style={styles.createButton} onPress={createGroup}>
-            <Text style={styles.createButtonText}>Create Group</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={() => setIsCreatingGroup(false)}>
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </>
-      ) : (
-        <>
-          <FlatList
-            data={groups}
-            renderItem={renderGroup}
-            keyExtractor={(item) => item.id}
-            style={styles.groupList}
-          />
-          <TouchableOpacity
-            style={styles.createGroupButton}
-            onPress={() => setIsCreatingGroup(true)}
-          >
-            <Text style={styles.createGroupButtonText}>Create Group</Text>
-          </TouchableOpacity>
-        </>
-      )}
-    </SafeAreaView>
+            <TouchableOpacity style={styles.createButton} onPress={createGroup}>
+              <LinearGradient
+                colors={['#34ebba', '#34d1eb']}
+                style={styles.createButtonGradient}
+              >
+                <Text style={styles.createButtonText}>Create Group</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setIsCreatingGroup(false)}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <FlatList
+              data={groups}
+              renderItem={renderGroup}
+              keyExtractor={(item) => item.id}
+              style={styles.groupList}
+            />
+            <TouchableOpacity
+              style={styles.createGroupButton}
+              onPress={() => setIsCreatingGroup(true)}
+            >
+              <LinearGradient
+                colors={['#34ebba', '#34d1eb']}
+                style={styles.createGroupButtonGradient}
+              >
+                <Text style={styles.createGroupButtonText}>Create Group</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </>
+        )}
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
   },
-  header: {
-    marginBottom: 20,
+  safeArea: {
+    flex: 1,
+  },
+  headerContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 36,
+    fontWeight: '700',
+    color: 'white',
+    marginBottom: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
   },
   groupList: {
     flex: 1,
+    paddingHorizontal: 20,
   },
-  groupContainer: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+  cardContainer: {
+    marginBottom: 15,
   },
-  groupName: {
-    fontSize: 18,
-  },
-  createGroupButton: {
-    backgroundColor: '#007bff',
-    padding: 15,
-    borderRadius: 5,
+  cardInner: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 15,
+    padding: 15,
   },
-  createGroupButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+  avatarContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  contactInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  nameText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: 'white',
+    marginBottom: 5,
+  },
+  chevronContainer: {
+    justifyContent: 'center',
   },
   inputContainer: {
     marginBottom: 20,
+    paddingHorizontal: 20,
   },
   input: {
     borderWidth: 1,
@@ -212,9 +267,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     fontSize: 16,
+    backgroundColor: 'white',
   },
   userList: {
     flex: 1,
+    paddingHorizontal: 20,
   },
   userContainer: {
     flexDirection: 'row',
@@ -226,16 +283,19 @@ const styles = StyleSheet.create({
   userName: {
     flex: 1,
     fontSize: 16,
+    color: 'white',
   },
   selectedUser: {
     backgroundColor: '#e0f7fa',
   },
   createButton: {
-    backgroundColor: '#007bff',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
     marginTop: 20,
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  createButtonGradient: {
+    padding: 15,
+    alignItems: 'center',
   },
   createButtonText: {
     color: '#fff',
@@ -250,6 +310,20 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  createGroupButton: {
+    marginTop: 20,
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  createGroupButtonGradient: {
+    padding: 15,
+    alignItems: 'center',
+  },
+  createGroupButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
