@@ -1,98 +1,139 @@
-import { StatusBar } from 'expo-status-bar';
-import { Button, ImageBackground, StyleSheet, Text, View } from 'react-native';
-import { TextInput } from 'react-native-paper';
+import React, { useState } from "react";
+import { StyleSheet, Text, View, TextInput, Image, SafeAreaView, TouchableOpacity, StatusBar, Alert, ScrollView } from "react-native";
 import firebase from '../config';
-import Home from './Home'; 
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+
 const auth = firebase.auth();
+const database = firebase.database();
+const backImage = require("../assets/backImage.png");
 
 export default function Auth(props) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-    var email,pwd;
+  const onHandleLogin = () => {
+    if (email !== "" && password !== "") {
+      auth.signInWithEmailAndPassword(email, password).then(() => {
+        const currentId = auth.currentUser.uid;
+        console.log("currentId from login ", currentId);
+        database.ref(`TableauProfils/unprofil-${currentId}`).update({
+          connected: true,
+        });
+        props.navigation.navigate("Home", { currentId: currentId });
+
+
+      }).catch((error) => {
+        alert(error.message);
+      });
+    }
+  };
+
   return (
-    <ImageBackground
-    source={require("../assets/photo1.jpeg")}
-    style={styles.container}>
-      <View style={{
-        backgroundColor:"#0005",
-        height:300,
-        width:'98%',
-        alignItems:'center',
-        justifyContent:'center',
-        borderRadius:10,
-      }}>
-      <Text
-        style={{
-          fontSize :32,
-          fontWeight: 'bold',
-          fontStyle:'italic',
-          color:'yellow',
-        }}>
-        Bienvenue
-      </Text>
-      <TextInput
-      onChangeText={(txt)=>(
-        email=txt
-      )}
-      keyboardType='email.address'
-      placeholder='email@gmail.com'
-      style={styles.textInputStyle}></TextInput>
-      <TextInput
-      onChangeText={(txt)=>(
-        pwd=txt
-      )}
-      placeholder='password'
-      secureTextEntry={true}
-      style={styles.textInputStyle}></TextInput>
-      <View style={{flexDirection:'row',gap:15,}}>
-      <Button title='submit'
-      onPress={()=>{
-        auth.signInWithEmailAndPassword(email,pwd).then(()=>{
-            props.navigation.navigate(Home);
-            }
-        ).catch((error)=>{
-            alert(error.message);
-        }
-        );
+    <LinearGradient
+      colors={['#6A11CB', '#2575FC']} // Gradient background
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar style="light" />
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20
+          }}
+        >
+          <Text style={styles.title}>Log In</Text>
 
-      }}
-      ></Button>
-        <Button title='Exit'
-      ></Button>
-      </View>
-      <Text
-      onPress={()=>{
-        props.navigation.navigate("NewUser");
-      }}
-      style={{
-        width:"100%",
-        textAlign:'right',
-        paddingRight:20,
-        color:'yellow',
-        fontWeight:"bold",
-        fontStyle:'italic',
-      }}
-      >
-        Create new user
-      </Text>
-      </View>
-      <StatusBar style="auto" />
-    </ImageBackground>
+          <View style={styles.inputContainer}>
+            <Ionicons name="mail" size={24} color="white" style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter email"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              autoFocus={true}
+              value={email}
+              onChangeText={(text) => setEmail(text)}
+              placeholderTextColor="rgba(255,255,255,0.7)"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Ionicons name="lock-closed" size={24} color="white" style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter password"
+              autoCapitalize="none"
+              autoCorrect={false}
+              secureTextEntry={true}
+              textContentType="password"
+              value={password}
+              onChangeText={(text) => setPassword(text)}
+              placeholderTextColor="rgba(255,255,255,0.7)"
+            />
+          </View>
+
+          <TouchableOpacity style={styles.buttonContainer} onPress={onHandleLogin}>
+            <Ionicons name="log-in" size={24} color="white" />
+            <Text style={styles.buttonText}>Log In</Text>
+          </TouchableOpacity>
+
+          <View style={{ marginTop: 20, flexDirection: 'row', alignItems: 'center', alignSelf: 'center' }}>
+            <Text style={{ color: 'gray', fontWeight: '600', fontSize: 14 }}>Don't have an account? </Text>
+            <TouchableOpacity onPress={() => props.navigation.navigate("NewUser")}>
+              <Text style={{ color: '#f57c00', fontWeight: '600', fontSize: 14 }}> Sign Up</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  title: {
+    fontSize: 36,
+    fontWeight: '700',
+    color: 'white',
+    marginBottom: 30,
+    letterSpacing: 1,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 10,
+    marginBottom: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    width: '100%',
+  },
+  inputIcon: {
+    marginRight: 15,
+  },
+  input: {
     flex: 1,
-    backgroundColor: '#fff',
+    color: 'white',
+    fontSize: 16,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    marginTop: 15,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-   // alignItems:'flex-end', //align horize
-   // justifyContent:'flex-start' //align vert
   },
-  textInputStyle:{
-    height:50 ,
-    width:'90%',
-    backgroundColor:'white',
-    marginBottom:10,
-  }
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 10,
+  },
 });
