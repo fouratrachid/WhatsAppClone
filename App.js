@@ -8,6 +8,8 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import GroupChat from './Screens/Home/GroupChat'
 import Groupes from './Screens/Home/Groupes'
+import Toast from 'react-native-toast-message';
+
 const Stack = createNativeStackNavigator();
 export default function App() {
   return (

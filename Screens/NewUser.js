@@ -4,38 +4,68 @@ import {
   Text,
   View,
   TextInput,
-  Image,
   SafeAreaView,
   TouchableOpacity,
   StatusBar,
-  Alert,
   ScrollView,
 } from "react-native";
 import firebase from '../config';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 
-const backImage = require("../assets/backImage.png");
 const auth = firebase.auth();
 
 export default function NewUser(props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [repassword, setRepassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRepassword, setShowRepassword] = useState(false);
+
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+  };
 
   const onHandleSignup = () => {
+    if (!validateEmail(email)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Email',
+        text2: 'Please enter a valid email address',
+      });
+      return;
+    }
+
     if (email !== '' && password !== '' && repassword !== '' && password === repassword) {
       auth.createUserWithEmailAndPassword(email, password).then(() => {
         const currentId = auth.currentUser.uid;
         console.log("currentId from login ", currentId);
         props.navigation.navigate("Home", { currentId: currentId });
+        Toast.show({
+          type: 'success',
+          text1: 'Signup Successful',
+          text2: 'Welcome!',
+        });
       }).catch((error) => {
-        alert(error.message);
+        Toast.show({
+          type: 'error',
+          text1: 'Signup Failed',
+          text2: error.message,
+        });
       });
     } else if (password !== repassword) {
-      alert("Passwords do not match");
+      Toast.show({
+        type: 'error',
+        text1: 'Passwords do not match',
+      });
     } else {
-      alert("Please fill all the fields");
+      Toast.show({
+        type: 'info',
+        text1: 'Missing Fields',
+        text2: 'Please fill all the fields',
+      });
     }
   };
 
@@ -78,12 +108,15 @@ export default function NewUser(props) {
               placeholder="Enter password"
               autoCapitalize="none"
               autoCorrect={false}
-              secureTextEntry={true}
+              secureTextEntry={!showPassword}
               textContentType="password"
               value={password}
               onChangeText={(text) => setPassword(text)}
               placeholderTextColor="rgba(255,255,255,0.7)"
             />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Ionicons name={showPassword ? "eye-off" : "eye"} size={24} color="white" />
+            </TouchableOpacity>
           </View>
 
           <View style={styles.inputContainer}>
@@ -93,12 +126,15 @@ export default function NewUser(props) {
               placeholder="Re-enter your password"
               autoCapitalize="none"
               autoCorrect={false}
-              secureTextEntry={true}
+              secureTextEntry={!showRepassword}
               textContentType="password"
               value={repassword}
               onChangeText={(text) => setRepassword(text)}
               placeholderTextColor="rgba(255,255,255,0.7)"
             />
+            <TouchableOpacity onPress={() => setShowRepassword(!showRepassword)}>
+              <Ionicons name={showRepassword ? "eye-off" : "eye"} size={24} color="white" />
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity style={styles.buttonContainer} onPress={onHandleSignup}>
@@ -162,4 +198,3 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
 });
-

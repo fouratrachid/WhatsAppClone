@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import {
   View,
@@ -12,6 +13,7 @@ import {
   Image,
   Alert,
   ScrollView,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import firebase from '../config';
@@ -32,8 +34,14 @@ const reflesdiscussions = firebase.database().ref("discussions");
 
 const Chat = (props) => {
   const [messages, setMessages] = useState([]);
+  const [filteredMessages, setFilteredMessages] = useState([]);
   const [inputText, setInputText] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isRecipientTyping, setIsRecipientTyping] = useState(false);
+  const [reactions, setReactions] = useState({});
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [selectedMessageId, setSelectedMessageId] = useState(null);
+
   const [typingTimeout, setTypingTimeout] = useState(null);
   const profile = props.route.params.item;
   const userId = firebase.auth().currentUser.uid;
@@ -41,20 +49,7 @@ const Chat = (props) => {
   const ref_unediscussion = reflesdiscussions.child(iddisc);
   const database = firebase.database();
 
-  // Fetch messages in real-time from Firebase
-  useEffect(() => {
-    ref_unediscussion.on("value", (snapshot) => {
-      const fetchedMessages = [];
-      snapshot.forEach((child) => {
-        if (child.key !== "typing") {
-          fetchedMessages.push(child.val());
-        }
-      });
-      setMessages(fetchedMessages.reverse());
-    });
-
-    return () => ref_unediscussion.off();
-  }, []);
+  const [recipientName, setRecipientName] = useState("");
 
   // Listen for typing status changes
   useEffect(() => {
@@ -62,14 +57,39 @@ const Chat = (props) => {
     const onTypingChange = typingRef.on('value', (snapshot) => {
       const typingData = snapshot.val();
       if (typingData) {
-        setIsRecipientTyping(typingData[profile.currentId] || false);
+        const isTyping = typingData[profile.currentId] || false;
+        setIsRecipientTyping(isTyping);
+        if (isTyping) {
+          setRecipientName(profile.nom); // Set the recipient's name
+        }
       } else {
         setIsRecipientTyping(false);
+        setRecipientName(""); // Clear the recipient's name
       }
     });
 
     return () => typingRef.off('value', onTypingChange);
   }, [profile.currentId]);
+
+  // Fetch messages in real-time from Firebase
+  useEffect(() => {
+    const fetchMessages = () => {
+      ref_unediscussion.on("value", (snapshot) => {
+        const fetchedMessages = []; fetch
+        snapshot.forEach((child) => {
+          if (child.key !== "typing" && child.key !== "reactions") {
+            fetchedMessages.push(child.val());
+          }
+        });
+        setMessages(fetchedMessages.reverse());
+        setFilteredMessages(fetchedMessages);
+      });
+    };
+
+    fetchMessages();
+
+    return () => ref_unediscussion.off();
+  }, []);
 
   // Update typing status in Firebase
   const handleInputChange = (text) => {
@@ -244,9 +264,54 @@ const Chat = (props) => {
     }
   };
 
+  // Filter messages based on search query
+  const filterMessages = (query) => {
+    setSearchQuery(query);
+    if (query.trim() === "") {
+      setFilteredMessages(messages);
+    } else {
+      const filtered = messages.filter((message) =>
+        message.text.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredMessages(filtered);
+    }
+  };
+
+  // Handle adding a reaction to a message
+  const addReaction = (messageId, reaction) => {
+    // Save reaction to Firebase
+    ref_unediscussion.child('reactions').child(messageId).set(reaction);
+
+    // Update local state
+    setReactions((prevReactions) => ({
+      ...prevReactions,
+      [messageId]: reaction,
+    }));
+    setShowReactionPicker(false);
+  };
+  useEffect(() => {
+    const fetchReactions = () => {
+      ref_unediscussion.child('reactions').on('value', (snapshot) => {
+        const fetchedReactions = snapshot.val() || {};
+        setReactions(fetchedReactions);
+      });
+    };
+
+    fetchReactions();
+
+    return () => ref_unediscussion.child('reactions').off();
+  }, []);
+
   // Render a single message
   const renderMessage = ({ item }) => {
     const isMe = item.sender === userId;
+    const formattedDate = new Date(item.date).toLocaleString('en-GB', {
+      weekday: 'short', // Short day name (e.g., Mon, Tue)
+      hour: '2-digit', // 2-digit hour
+      minute: '2-digit', // 2-digit minute
+      hour12: false, // 24-hour format
+    });
+
     return (
       <View
         style={[
@@ -275,7 +340,18 @@ const Chat = (props) => {
         ) : (
           <Text style={styles.messageText}>{item.text}</Text>
         )}
-        <Text style={styles.timestamp}>{new Date(item.date).toLocaleTimeString()}</Text>
+        <Text style={styles.timestamp}>{formattedDate}</Text>
+        <View style={styles.reactionContainer}>
+          <TouchableOpacity onPress={() => {
+            setSelectedMessageId(item.id);
+            setShowReactionPicker(true);
+          }}>
+            <Ionicons name="happy-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+          {reactions[item.id] && (
+            <Text style={styles.reactionText}>{reactions[item.id]}</Text>
+          )}
+        </View>
       </View>
     );
   };
@@ -305,12 +381,19 @@ const Chat = (props) => {
           </TouchableOpacity>
         </View>
 
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search messages..."
+          value={searchQuery}
+          onChangeText={filterMessages}
+        />
+
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.flexGrow}
         >
           <FlatList
-            data={messages}
+            data={filteredMessages}
             renderItem={renderMessage}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.messagesList}
@@ -318,9 +401,8 @@ const Chat = (props) => {
           />
 
           {isRecipientTyping && (
-            <Text style={styles.typingIndicator}>Recipient is typing...</Text>
+            <Text style={styles.typingIndicator}>{recipientName} is typing...</Text>
           )}
-
           <View style={styles.inputContainer}>
             <TouchableOpacity onPress={sendLocation} style={styles.locationButton}>
               <Ionicons name="location-outline" size={24} color="#0F52BA" />
@@ -346,6 +428,31 @@ const Chat = (props) => {
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      <Modal
+        visible={showReactionPicker}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowReactionPicker(false)}
+      >
+        <TouchableOpacity
+          style={styles.reactionPickerBackdrop}
+          activeOpacity={1}
+          onPressOut={() => setShowReactionPicker(false)}
+        >
+          <View style={styles.reactionPicker}>
+            {['😀', '❤️', '👍', '👎', '😂', '😢'].map((emoji) => (
+              <TouchableOpacity
+                key={emoji}
+                onPress={() => addReaction(selectedMessageId, emoji)}
+                style={styles.reactionButton}
+              >
+                <Text style={styles.reactionEmoji}>{emoji}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -383,6 +490,15 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
+  },
+  searchInput: {
+    height: 40,
+    borderColor: "#ddd",
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    margin: 10,
+    backgroundColor: "#f9f9f9",
   },
   messagesList: {
     paddingHorizontal: 10,
@@ -458,6 +574,47 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 10,
+  },
+  reactionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  reactionText: {
+    marginLeft: 5,
+    color: '#fff',
+  },
+  reactionPickerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  reactionPickerBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reactionPicker: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 10,
+    elevation: 5,
+  },
+  reactionButton: {
+    marginHorizontal: 5,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#f0f0f0',
+  },
+  reactionEmoji: {
+    fontSize: 24,
   },
 });
 

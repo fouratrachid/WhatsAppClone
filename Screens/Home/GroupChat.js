@@ -32,6 +32,7 @@ const GroupChat = (props) => {
     console.log("Group:", group);
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState("");
+    const [users, setUsers] = useState({});
     const userId = firebase.auth().currentUser.uid;
     const ref_groupChat = firebase.database().ref(`groupChats/${group.id}`);
 
@@ -46,6 +47,21 @@ const GroupChat = (props) => {
         });
 
         return () => ref_groupChat.off();
+    }, []);
+
+    // Fetch user details
+    useEffect(() => {
+        const ref_users = firebase.database().ref('TableauProfils');
+        ref_users.on('value', (snapshot) => {
+            const usersData = {};
+            snapshot.forEach((childSnapshot) => {
+                const user = childSnapshot.val();
+                usersData[user.currentId] = user;
+            });
+            setUsers(usersData);
+        });
+
+        return () => ref_users.off();
     }, []);
 
     // Send a new message to Firebase
@@ -214,6 +230,9 @@ const GroupChat = (props) => {
                     isMe ? styles.myMessage : styles.otherMessage,
                 ]}
             >
+                {!isMe && users[item.sender] && (
+                    <Text style={styles.senderName}>{users[item.sender].nom}</Text>
+                )}
                 {item.type === 'image' ? (
                     <Image
                         source={{ uri: item.text }}
@@ -330,6 +349,11 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-end',
         marginTop: 5,
         color: '#fff',
+    },
+    senderName: {
+        color: '#fff',
+        fontWeight: 'bold',
+        marginBottom: 5,
     },
     inputContainer: {
         flexDirection: 'row',

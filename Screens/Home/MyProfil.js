@@ -22,7 +22,6 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = "https://btcgepwqrhodfzpqnuup.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0Y2dlcHdxcmhvZGZ6cHFudXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI5Mjg1NjgsImV4cCI6MjA0ODUwNDU2OH0.JQMk-biUKTkGzn2ElhKKFSK9tn8x0ufYPlfKQFMZpLo";
 
-
 export const supabase = createClient(supabaseUrl, supabaseKey);
 const database = firebase.database();
 const auth = firebase.auth();
@@ -36,8 +35,6 @@ export default function MyProfil(props) {
   const [uriImage, setUriImage] = useState("");
   const userId = firebase.auth().currentUser.uid; // Get the authenticated user's ID
   const navigation = useNavigation();
-
-
 
   // Fetch user data on mount
   useEffect(() => {
@@ -81,6 +78,25 @@ export default function MyProfil(props) {
 
       uploadImageToSupabase(imageUri);
       console.log("image uploaded");
+    }
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Permission to access camera is required!');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const imageUri = result.assets[0].uri;
+      uploadImageToSupabase(imageUri);
     }
   };
 
@@ -148,6 +164,7 @@ export default function MyProfil(props) {
       .then(() => Alert.alert("Success", "Profile updated successfully!"))
       .catch((error) => Alert.alert("Error", error.message));
   };
+
   return (
     <LinearGradient
       colors={['#6A11CB', '#2575FC']} // Gradient background
@@ -174,12 +191,14 @@ export default function MyProfil(props) {
               }
               style={styles.profileImage}
             />
-            <TouchableOpacity
-              style={styles.cameraIconContainer}
-              onPress={pickImage}
-            >
-              <Ionicons name="camera" size={24} color="#6A11CB" />
-            </TouchableOpacity>
+            <View style={styles.cameraIconContainer}>
+              <TouchableOpacity onPress={pickImage}>
+                <Ionicons name="image" size={24} color="#6A11CB" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={takePhoto}>
+                <Ionicons name="camera" size={24} color="#6A11CB" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.inputContainer}>
@@ -277,6 +296,7 @@ const styles = {
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    flexDirection: 'row',
   },
   inputContainer: {
     flexDirection: 'row',

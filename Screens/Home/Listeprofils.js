@@ -5,7 +5,8 @@ import {
   Text,
   TouchableOpacity,
   SafeAreaView,
-  TextInput
+  TextInput,
+  Linking
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -54,11 +55,11 @@ const ListeProfiles = (props) => {
             source={{ uri: item.uriImage }}
             style={styles.avatar}
           />
-          <View
-            style={[
-              styles.statusDot,
-              { backgroundColor: item.connected ? 'green' : 'red' }
-            ]}
+          <Ionicons
+            name={item.connected ? "checkmark-circle" : "close-circle"}
+            size={20}
+            color={item.connected ? "green" : "red"}
+            style={styles.statusIcon}
           />
         </View>
         <View style={styles.contactInfo}>
@@ -68,10 +69,10 @@ const ListeProfiles = (props) => {
           <Text style={styles.pseudoText} numberOfLines={1}>
             @{item.pseudo}
           </Text>
-          <Text style={styles.phoneText}>
-            <Ionicons name="call" size={14} color="#666" /> {item.telephone}
-          </Text>
         </View>
+        <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.telephone}`)} style={styles.callIconContainer}>
+          <Ionicons name="call" size={24} color="#666" />
+        </TouchableOpacity>
         <View style={styles.chevronContainer}>
           <Ionicons name="chevron-forward" size={24} color="#888" />
         </View>
@@ -178,15 +179,10 @@ const styles = {
     borderRadius: 30,
     marginRight: 15,
   },
-  statusDot: {
+  statusIcon: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    width: 15,
-    height: 15,
-    borderRadius: 7.5,
-    borderWidth: 2,
-    borderColor: 'white',
   },
   contactInfo: {
     flex: 1,
@@ -203,9 +199,8 @@ const styles = {
     color: 'rgba(255,255,255,0.7)',
     marginBottom: 5,
   },
-  phoneText: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.7)',
+  callIconContainer: {
+    marginRight: 15,
   },
   chevronContainer: {
     justifyContent: 'center',
